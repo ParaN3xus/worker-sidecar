@@ -7,6 +7,8 @@ const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
 let rendererPromise: Promise<WasmiSidecar> | undefined;
+let guestWasmPromise: Promise<Uint8Array> | undefined;
+let fontsPromise: Promise<Uint8Array[]> | undefined;
 
 export async function renderViaGuest(
 	payload: RenderRequest,
@@ -23,10 +25,8 @@ export async function renderViaGuest(
 	}
 
 	try {
-		const result = sidecar.call("render", [
-			encoder.encode(JSON.stringify(payload)),
-		]);
-		const parsed = JSON.parse(decoder.decode(result)) as RenderResponse;
+		const result = callRenderer(sidecar, payload);
+		const parsed = parseRenderResponse(result);
 		return {
 			status: parsed.errors.length > 0 ? 422 : 200,
 			payload: parsed,
@@ -37,6 +37,23 @@ export async function renderViaGuest(
 			payload: errorPayload(`renderer call failed: ${message(error)}`),
 		};
 	}
+}
+
+function callRenderer(
+	sidecar: WasmiSidecar,
+	payload: RenderRequest,
+): Uint8Array {
+	try {
+		return sidecar.call("render", [encoder.encode(JSON.stringify(payload))]);
+	} catch (error) {
+		rendererPromise = undefined;
+		sidecar.close();
+		throw error;
+	}
+}
+
+function parseRenderResponse(result: Uint8Array): RenderResponse {
+	return JSON.parse(decoder.decode(result)) as RenderResponse;
 }
 
 async function ensureRenderer(): Promise<WasmiSidecar> {
@@ -51,8 +68,8 @@ async function ensureRenderer(): Promise<WasmiSidecar> {
 }
 
 async function createRenderer(): Promise<WasmiSidecar> {
-	const sidecar = await WasmiSidecar.load(GUEST_WASM_URL);
-	const fonts = await Promise.all(FONT_FILES.map(fetchFont));
+	const [guestWasm, fonts] = await Promise.all([guestWasmBytes(), fontBytes()]);
+	const sidecar = await WasmiSidecar.load(guestWasm);
 	const initialized = sidecar.call("init", [packFonts(fonts)]);
 
 	if (initialized.length !== 1 || initialized[0] !== 1) {
@@ -62,10 +79,38 @@ async function createRenderer(): Promise<WasmiSidecar> {
 	return sidecar;
 }
 
-async function fetchFont(name: string): Promise<Uint8Array> {
-	const response = await fetch(FONT_BASE_URL + name);
+async function guestWasmBytes(): Promise<Uint8Array> {
+	if (!guestWasmPromise) {
+		guestWasmPromise = fetchBytes(GUEST_WASM_URL, "guest wasm").catch(
+			(error) => {
+				guestWasmPromise = undefined;
+				throw error;
+			},
+		);
+	}
+
+	return guestWasmPromise;
+}
+
+async function fontBytes(): Promise<Uint8Array[]> {
+	if (!fontsPromise) {
+		fontsPromise = Promise.all(
+			FONT_FILES.map((name) =>
+				fetchBytes(FONT_BASE_URL + name, `font ${name}`),
+			),
+		).catch((error) => {
+			fontsPromise = undefined;
+			throw error;
+		});
+	}
+
+	return fontsPromise;
+}
+
+async function fetchBytes(url: string, label: string): Promise<Uint8Array> {
+	const response = await fetch(url);
 	if (!response.ok) {
-		throw new Error(`failed to download font ${name}: HTTP ${response.status}`);
+		throw new Error(`failed to download ${label}: HTTP ${response.status}`);
 	}
 	return new Uint8Array(await response.arrayBuffer());
 }
