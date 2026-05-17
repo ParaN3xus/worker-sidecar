@@ -29,8 +29,14 @@ let rendererPromise: Promise<WasmiSidecar> | undefined;
 
 export default {
 	async fetch(request: Request): Promise<Response> {
+		const url = new URL(request.url);
+
+		if (url.pathname !== "/svg") {
+			return new Response("not found", { status: 404, headers: TEXT_HEADERS });
+		}
+
 		if (request.method === "GET") {
-			return getSvgResponse(request);
+			return getSvgResponse(url);
 		}
 
 		if (request.method === "POST") {
@@ -41,12 +47,7 @@ export default {
 	},
 };
 
-async function getSvgResponse(request: Request): Promise<Response> {
-	const url = new URL(request.url);
-	if (url.pathname !== "/svg") {
-		return new Response("not found", { status: 404, headers: TEXT_HEADERS });
-	}
-
+async function getSvgResponse(url: URL): Promise<Response> {
 	const code = url.searchParams.get("code");
 	if (!code || code.trim() === "") {
 		return new Response("missing required query parameter: code", {
