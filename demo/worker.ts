@@ -1,5 +1,5 @@
 import { FONT_BASE_URL, FONT_FILES, GUEST_WASM_URL } from "./config";
-import { WasmiSidecar } from "./sidecar";
+import { WasmiSidecar } from "@paranexus/worker-sidecar";
 
 type RenderPayload = {
   export?: unknown;
@@ -231,4 +231,3 @@ function diagnosticText(payload: RenderResponse, fallback: string): string {
 function message(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
-
