@@ -4,3 +4,7 @@ compatibility_date = "2026-05-16"
 
 [build]
 command = "demo/build-worker.sh"
+
+[observability.logs]
+enabled = false
+invocation_logs = true
