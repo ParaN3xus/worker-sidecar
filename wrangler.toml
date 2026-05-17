@@ -1,5 +1,5 @@
-name = "typst-sidecar-worker"
-main = "build/index.js"
+name = "typst-worker"
+main = "demo/build/index.js"
 compatibility_date = "2026-05-16"
 
 [build]
