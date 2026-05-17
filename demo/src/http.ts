@@ -1,4 +1,4 @@
-import type { Mode, RenderRequest, RenderResponse } from "./types";
+import type { Format, Mode, RenderRequest, RenderResponse } from "./types";
 
 export const JSON_HEADERS = {
 	"content-type": "application/json; charset=utf-8",
@@ -9,9 +9,11 @@ export const TEXT_HEADERS = {
 };
 
 const MODES = new Set<Mode>(["markup", "math", "code"]);
+const FORMATS = new Set<Format>(["svg"]);
 
 export async function parseRenderRequest(
 	request: Request,
+	format: Format | undefined,
 ): Promise<RenderRequest | Response> {
 	let body: unknown;
 
@@ -25,7 +27,11 @@ export async function parseRenderRequest(
 		return jsonError(400, "request body must be a json object");
 	}
 
-	if (body.format !== "svg") {
+	const parsedFormat = format ?? body.format;
+	if (
+		typeof parsedFormat !== "string" ||
+		!FORMATS.has(parsedFormat as Format)
+	) {
 		return jsonError(400, "format must be svg");
 	}
 
@@ -38,7 +44,7 @@ export async function parseRenderRequest(
 	}
 
 	return {
-		format: body.format,
+		format: parsedFormat as Format,
 		mode: body.mode as Mode,
 		code: body.code,
 	};

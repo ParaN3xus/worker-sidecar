@@ -8,8 +8,8 @@
 	},
 	"scripts": {
 		"build": "demo/build-worker.sh",
-		"deploy": "wrangler deploy --config demo/wrangler.toml",
-		"dry-run": "wrangler deploy --config demo/wrangler.toml --dry-run",
+		"deploy": "wrangler deploy --config wrangler.toml",
+		"dry-run": "wrangler deploy --config wrangler.toml --dry-run",
 		"publish:guest": "demo/publish-guest.sh"
 	},
 	"devDependencies": {

@@ -6,30 +6,46 @@ import {
 	textError,
 } from "./http";
 import { renderViaGuest } from "./renderer";
-import type { Mode, RenderRequest } from "./types";
+import type { Format, Mode, RenderRequest } from "./types";
 
 export default {
 	async fetch(request: Request): Promise<Response> {
 		const url = new URL(request.url);
+		const format = routeFormat(url.pathname);
 
-		if (url.pathname !== "/svg") {
-			return textError(404, "not found");
+		if (format instanceof Response) {
+			return format;
 		}
 
 		if (request.method === "GET") {
-			return getSvgResponse(url);
+			return getRenderResponse(url, format);
 		}
 
 		if (request.method === "POST") {
-			return postSvgResponse(request);
+			return postRenderResponse(request, format);
 		}
 
 		return jsonError(405, "only GET and POST are supported");
 	},
 };
 
-async function getSvgResponse(url: URL): Promise<Response> {
-	const payload = queryRenderRequest(url);
+function routeFormat(pathname: string): Format | undefined | Response {
+	if (pathname === "/") {
+		return undefined;
+	}
+
+	if (pathname === "/svg") {
+		return "svg";
+	}
+
+	return textError(404, "not found");
+}
+
+async function getRenderResponse(
+	url: URL,
+	format: Format | undefined,
+): Promise<Response> {
+	const payload = queryRenderRequest(url, format);
 	if (payload instanceof Response) {
 		return payload;
 	}
@@ -39,7 +55,8 @@ async function getSvgResponse(url: URL): Promise<Response> {
 		return new Response(result.payload.body, {
 			status: 200,
 			headers: {
-				"content-type": result.payload.content_type ?? "image/svg+xml",
+				"content-type":
+					result.payload.content_type ?? "application/octet-stream",
 			},
 		});
 	}
@@ -50,8 +67,11 @@ async function getSvgResponse(url: URL): Promise<Response> {
 	);
 }
 
-async function postSvgResponse(request: Request): Promise<Response> {
-	const payload = await parseRenderRequest(request);
+async function postRenderResponse(
+	request: Request,
+	format: Format | undefined,
+): Promise<Response> {
+	const payload = await parseRenderRequest(request, format);
 	if (payload instanceof Response) {
 		return payload;
 	}
@@ -60,17 +80,29 @@ async function postSvgResponse(request: Request): Promise<Response> {
 	return jsonResponse(result.status, result.payload);
 }
 
-function queryRenderRequest(url: URL): RenderRequest | Response {
+function queryRenderRequest(
+	url: URL,
+	format: Format | undefined,
+): RenderRequest | Response {
 	const code = url.searchParams.get("code");
 	if (!code || code.trim() === "") {
 		return textError(400, "missing required query parameter: code");
 	}
 
+	const parsedFormat = format ?? queryFormat(url);
+	if (!parsedFormat) {
+		return textError(400, "missing required query parameter: format");
+	}
+
 	return {
-		format: "svg",
+		format: parsedFormat,
 		mode: queryMode(url),
 		code,
 	};
+}
+
+function queryFormat(url: URL): Format | undefined {
+	return url.searchParams.get("format") === "svg" ? "svg" : undefined;
 }
 
 function queryMode(url: URL): Mode {
