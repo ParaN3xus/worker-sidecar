@@ -1,11 +1,12 @@
 {
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "ES2022",
-    "moduleResolution": "Bundler",
-    "strict": true,
-    "noEmit": true,
-    "types": ["@cloudflare/workers-types"]
-  },
-  "include": ["src/**/*.ts", "demo/**/*.ts"]
+	"compilerOptions": {
+		"target": "ES2022",
+		"module": "ES2022",
+		"moduleResolution": "Bundler",
+		"lib": ["ES2022"],
+		"strict": true,
+		"noEmit": true,
+		"types": ["@cloudflare/workers-types"]
+	},
+	"include": ["src/**/*.ts", "demo/**/*.ts"]
 }

@@ -1,20 +1,21 @@
 {
-  "name": "@paranexus/worker-sidecar",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
-  "exports": {
-    ".": "./src/sidecar.ts"
-  },
-  "scripts": {
-    "build": "demo/build-worker.sh",
-    "deploy": "wrangler deploy --config demo/wrangler.toml",
-    "dry-run": "wrangler deploy --config demo/wrangler.toml --dry-run",
-    "publish:guest": "demo/publish-guest.sh"
-  },
-  "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260515.0",
-    "esbuild": "^0.25.0",
-    "wrangler": "^4.92.0"
-  }
+	"name": "@paran3xus/worker-sidecar",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": "./src/sidecar.ts"
+	},
+	"scripts": {
+		"build": "demo/build-worker.sh",
+		"deploy": "wrangler deploy --config demo/wrangler.toml",
+		"dry-run": "wrangler deploy --config demo/wrangler.toml --dry-run",
+		"publish:guest": "demo/publish-guest.sh"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.15",
+		"@cloudflare/workers-types": "^4.20260515.0",
+		"esbuild": "^0.28.0",
+		"wrangler": "^4.92.0"
+	}
 }
