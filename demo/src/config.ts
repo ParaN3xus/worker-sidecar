@@ -1,5 +1,4 @@
-export const GUEST_RELEASE_TAG = "guest_wasm";
-export const GUEST_WASM_URL = `https://github.com/ParaN3xus/worker-sidecar/releases/download/${GUEST_RELEASE_TAG}/guest.wasm`;
+export const GUEST_WASM_URL = `https://github.com/ParaN3xus/worker-sidecar/releases/download/guest_wasm/guest.wasm`;
 
 export const FONT_BASE_URL =
 	"https://raw.githubusercontent.com/typst/typst-assets/main/files/fonts/";
