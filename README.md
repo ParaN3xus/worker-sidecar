@@ -1,8 +1,8 @@
 # Worker Sidecar
 
-[Cloudflare Workers](https://workers.cloudflare.com/) are great. WebAssembly is great. But do you know what isn’t great? Your WASM binary is too large, while the Cloudflare free plan only allows Workers smaller than 3MB.
+[Cloudflare Workers](https://workers.cloudflare.com/) are great. WebAssembly is great. But do you know what isn't great? Your WASM binary is too large, while the Cloudflare free plan only allows Workers smaller than 3MB.
 
-Want to manually compress your WASM, or fetch the WASM from a URL and load it dynamically inside the Worker? No - you’ll be greeted with the merciless:
+Want to manually compress your WASM, or fetch the WASM from a URL and load it dynamically inside the Worker? No - you'll be greeted with the merciless:
 
 > "WASM code generation disallowed by embedder"
 
