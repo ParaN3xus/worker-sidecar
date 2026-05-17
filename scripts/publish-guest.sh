@@ -18,6 +18,6 @@ else
   gh release create "$TAG" "$ASSET" \
     --title "$TAG" \
     --notes "Sidecar guest wasm asset" \
-    --target "main" \
+    --target "sidecar" \
     --prerelease
 fi
