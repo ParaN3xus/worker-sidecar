@@ -1,3 +1,4 @@
+import demoDocSource from "./demo-doc.typ";
 import {
 	diagnosticText,
 	jsonError,
@@ -55,23 +56,37 @@ async function getRenderResponse(
 ): Promise<Response> {
 	const payload = queryRenderRequest(url, format);
 	if (payload instanceof Response) {
+		if (url.pathname === "/" && format === undefined) {
+			return demoDocResponse();
+		}
 		return payload;
 	}
 
 	const result = await renderViaGuest(payload);
 	if (result.status === 200 && result.payload.body) {
-		return new Response(renderBody(result.payload), {
-			status: 200,
-			headers: {
-				"content-type":
-					result.payload.content_type ?? "application/octet-stream",
-			},
-		});
+		return renderResponseBody(result.payload);
 	}
 
 	return textError(
 		result.status,
 		diagnosticText(result.payload, "render failed"),
+	);
+}
+
+async function demoDocResponse(): Promise<Response> {
+	const result = await renderViaGuest({
+		format: "pdf",
+		mode: "markup",
+		code: demoDocSource,
+	});
+
+	if (result.status === 200 && result.payload.body) {
+		return renderResponseBody(result.payload);
+	}
+
+	return textError(
+		result.status,
+		diagnosticText(result.payload, "failed to render demo document"),
 	);
 }
 
@@ -134,6 +149,15 @@ function renderBody(payload: RenderResponse): BodyInit {
 	}
 
 	return payload.body;
+}
+
+function renderResponseBody(payload: RenderResponse): Response {
+	return new Response(renderBody(payload), {
+		status: 200,
+		headers: {
+			"content-type": payload.content_type ?? "application/octet-stream",
+		},
+	});
 }
 
 function decodeBase64(value: string): Uint8Array {

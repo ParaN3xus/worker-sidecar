@@ -9,4 +9,7 @@ await esbuild.build({
 	platform: "browser",
 	target: "es2022",
 	external: ["./worker_sidecar.wasm"],
+	loader: {
+		".typ": "text",
+	},
 });
