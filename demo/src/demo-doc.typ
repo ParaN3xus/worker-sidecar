@@ -40,7 +40,7 @@ GET returns the rendered artifact directly. Failed GET requests return plain tex
 
 === POST body schema
 
-```json
+```
 {
   format?: "svg" | "pdf" | "png",
   mode: "markup" | "math" | "code",
@@ -68,7 +68,7 @@ For `pdf` and `png`, `body` is base64-encoded binary data. For `svg`, it is SVG 
 
 #let hello = "= Hello from Typst in Cloudflare Workers"
 #let math = "x^2 + y^2 = z^2"
-#let version = "set page(width: auto, height: auto); text(24pt, sys.version)"
+#let version = "set page(width: auto, height: auto); text(24pt, repr(sys.version))"
 
 === GET
 
@@ -135,7 +135,5 @@ For `pdf` and `png`, `body` is base64-encoded binary data. For `svg`, it is SVG 
 
 - SVG
   #post-curl(hello, path: "/svg")
-- PDF
-  #post-curl(math, path: "/pdf", mode: "math")
 - Format in JSON
   #post-curl("= API response", format: "pdf")
