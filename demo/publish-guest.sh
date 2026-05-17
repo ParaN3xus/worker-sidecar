@@ -5,11 +5,11 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 TAG="${GUEST_RELEASE_TAG:-guest_wasm}"
-TARGET_DIR="demo/target/wasm32-unknown-unknown/release"
+TARGET_DIR="target/wasm32-unknown-unknown/release"
 BUILD_ASSET="$TARGET_DIR/sidecar_typst_guest.wasm"
 UPLOAD_ASSET="$TARGET_DIR/guest.wasm"
 
-cargo build --manifest-path demo/Cargo.toml --target wasm32-unknown-unknown --release
+cargo build --package sidecar-typst-guest --target wasm32-unknown-unknown --release
 
 WASM_OPT="${WASM_OPT_BIN:-wasm-opt}"
 if command -v "$WASM_OPT" >/dev/null 2>&1; then

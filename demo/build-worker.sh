@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-cargo build --target wasm32-unknown-unknown --release
+cargo build --package sidecar-host --target wasm32-unknown-unknown --release
 
 mkdir -p demo/build
 cp target/wasm32-unknown-unknown/release/sidecar_host.wasm demo/build/worker_sidecar.wasm

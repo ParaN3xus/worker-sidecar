@@ -3,6 +3,10 @@ name = "sidecar-host"
 version = "0.1.0"
 edition = "2021"
 
+[workspace]
+members = ["demo"]
+resolver = "2"
+
 [lib]
 crate-type = ["cdylib"]
 
