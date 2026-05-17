@@ -1,0 +1,25 @@
+[package]
+name = "sidecar-host"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+members = ["guest"]
+resolver = "2"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasmi = { version = "1.0.9", default-features = false, features = ["std"] }
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+opt-level = "z"
+debug = 0
+debug-assertions = false
+overflow-checks = false
+incremental = false
+strip = "symbols"

@@ -1,5 +1,7 @@
 local/
 build/
 target/
-node_modules
-.wrangler
+guest/target/
+node_modules/
+.wrangler/
+
