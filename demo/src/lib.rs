@@ -93,8 +93,8 @@ impl World for WorkerWorld {
 
 #[derive(Deserialize)]
 struct RenderRequest {
-    export: String,
     format: String,
+    mode: String,
     code: String,
 }
 
@@ -127,12 +127,12 @@ fn render(request: &[u8]) -> Result<Vec<u8>, String> {
     let request: RenderRequest = serde_json::from_slice(request)
         .map_err(|err| format!("render request must be valid json: {err}"))?;
 
-    if request.export != "svg" {
+    if request.format != "svg" {
         return Ok(json_response(RenderResponse {
             warnings: vec![],
             errors: vec![Diagnostic {
                 severity: "error",
-                message: "only svg export is implemented".to_owned(),
+                message: "only svg format is implemented".to_owned(),
             }],
             body: None,
             content_type: None,
@@ -151,7 +151,7 @@ fn render(request: &[u8]) -> Result<Vec<u8>, String> {
         }));
     }
 
-    let source = format_typst_source(&request.format, &request.code)?;
+    let source = format_typst_source(&request.mode, &request.code)?;
     let mut world = WORLD
         .lock()
         .map_err(|_| "failed to lock Typst world".to_owned())?;
@@ -186,12 +186,12 @@ fn render_world(world: &mut WorkerWorld, source: String) -> Vec<u8> {
     }
 }
 
-fn format_typst_source(format: &str, code: &str) -> Result<String, String> {
-    match format {
+fn format_typst_source(mode: &str, code: &str) -> Result<String, String> {
+    match mode {
         "markup" => Ok(code.to_owned()),
         "math" => Ok(format!("$ {code} $")),
         "code" => Ok(format!("#{{ {code} }}")),
-        _ => Err("format must be one of markup, math, code".to_owned()),
+        _ => Err("mode must be one of markup, math, code".to_owned()),
     }
 }
 

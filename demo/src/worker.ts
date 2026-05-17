@@ -6,7 +6,7 @@ import {
 	textError,
 } from "./http";
 import { renderViaGuest } from "./renderer";
-import type { CodeFormat, RenderRequest } from "./types";
+import type { Mode, RenderRequest } from "./types";
 
 export default {
 	async fetch(request: Request): Promise<Response> {
@@ -67,13 +67,13 @@ function queryRenderRequest(url: URL): RenderRequest | Response {
 	}
 
 	return {
-		export: "svg",
-		format: queryFormat(url),
+		format: "svg",
+		mode: queryMode(url),
 		code,
 	};
 }
 
-function queryFormat(url: URL): CodeFormat {
-	const format = url.searchParams.get("format");
-	return format === "math" || format === "code" ? format : "markup";
+function queryMode(url: URL): Mode {
+	const mode = url.searchParams.get("mode");
+	return mode === "math" || mode === "code" ? mode : "markup";
 }

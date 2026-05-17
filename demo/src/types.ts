@@ -1,9 +1,9 @@
-export type ExportKind = "svg";
-export type CodeFormat = "markup" | "math" | "code";
+export type Format = "svg";
+export type Mode = "markup" | "math" | "code";
 
 export type RenderRequest = {
-	export: ExportKind;
-	format: CodeFormat;
+	format: Format;
+	mode: Mode;
 	code: string;
 };
 

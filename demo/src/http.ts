@@ -1,4 +1,4 @@
-import type { CodeFormat, RenderRequest, RenderResponse } from "./types";
+import type { Mode, RenderRequest, RenderResponse } from "./types";
 
 export const JSON_HEADERS = {
 	"content-type": "application/json; charset=utf-8",
@@ -8,7 +8,7 @@ export const TEXT_HEADERS = {
 	"content-type": "text/plain; charset=utf-8",
 };
 
-const FORMATS = new Set<CodeFormat>(["markup", "math", "code"]);
+const MODES = new Set<Mode>(["markup", "math", "code"]);
 
 export async function parseRenderRequest(
 	request: Request,
@@ -25,15 +25,12 @@ export async function parseRenderRequest(
 		return jsonError(400, "request body must be a json object");
 	}
 
-	if (body.export !== "svg") {
-		return jsonError(400, "export must be svg");
+	if (body.format !== "svg") {
+		return jsonError(400, "format must be svg");
 	}
 
-	if (
-		typeof body.format !== "string" ||
-		!FORMATS.has(body.format as CodeFormat)
-	) {
-		return jsonError(400, "format must be one of markup, math, code");
+	if (typeof body.mode !== "string" || !MODES.has(body.mode as Mode)) {
+		return jsonError(400, "mode must be one of markup, math, code");
 	}
 
 	if (typeof body.code !== "string" || body.code.trim() === "") {
@@ -41,8 +38,8 @@ export async function parseRenderRequest(
 	}
 
 	return {
-		export: body.export,
-		format: body.format as CodeFormat,
+		format: body.format,
+		mode: body.mode as Mode,
 		code: body.code,
 	};
 }
