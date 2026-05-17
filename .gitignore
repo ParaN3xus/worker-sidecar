@@ -2,6 +2,6 @@ local/
 build/
 demo/build/
 target/
-demo/guest/target/
+demo/target/
 node_modules/
 .wrangler/

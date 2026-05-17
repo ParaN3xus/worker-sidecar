@@ -119,7 +119,7 @@ fn init(font_package: &[u8]) -> Result<Vec<u8>, String> {
         .lock()
         .map_err(|_| "failed to lock Typst world".to_owned())?;
     *world = Some(WorkerWorld::new(fonts));
-    Ok(br#"{"status":"initialized"}"#.to_vec())
+    Ok(vec![1])
 }
 
 #[cfg_attr(target_arch = "wasm32", wasm_func)]
@@ -190,14 +190,12 @@ fn format_typst_source(format: &str, code: &str) -> Result<String, String> {
     match format {
         "markup" => Ok(code.to_owned()),
         "math" => Ok(format!("$ {code} $")),
-        "code" => Ok(format!("```typc\n{code}\n```")),
+        "code" => Ok(format!("#{{ {code} }}")),
         _ => Err("format must be one of markup, math, code".to_owned()),
     }
 }
 
-fn diagnostics<'a>(
-    diagnostics: impl Iterator<Item = &'a SourceDiagnostic>,
-) -> Vec<Diagnostic> {
+fn diagnostics<'a>(diagnostics: impl Iterator<Item = &'a SourceDiagnostic>) -> Vec<Diagnostic> {
     diagnostics
         .map(|diagnostic| Diagnostic {
             severity: match diagnostic.severity {
@@ -248,7 +246,5 @@ fn read_u32(input: &[u8], offset: &mut usize) -> Result<u32, String> {
 }
 
 fn json_response(response: RenderResponse) -> Vec<u8> {
-    serde_json::to_vec(&response).unwrap_or_else(|_| {
-        br#"{"warnings":[],"errors":[{"severity":"error","message":"failed to serialize response"}],"body":null,"content_type":null}"#.to_vec()
-    })
+    serde_json::to_vec(&response).expect("render response should be serializable")
 }
