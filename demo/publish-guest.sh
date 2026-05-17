@@ -4,20 +4,26 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-TAG="${GUEST_RELEASE_TAG:-guest-v0.1.0}"
-ASSET="demo/build/guest.wasm"
+TAG="${GUEST_RELEASE_TAG:-guest_wasm}"
+TARGET_DIR="demo/target/wasm32-unknown-unknown/release"
+BUILD_ASSET="$TARGET_DIR/sidecar_typst_guest.wasm"
+UPLOAD_ASSET="$TARGET_DIR/guest.wasm"
 
-if [[ ! -f "$ASSET" ]]; then
-  echo "error: missing $ASSET, run demo/build-worker.sh first" >&2
-  exit 1
+cargo build --manifest-path demo/Cargo.toml --target wasm32-unknown-unknown --release
+
+WASM_OPT="${WASM_OPT_BIN:-wasm-opt}"
+if command -v "$WASM_OPT" >/dev/null 2>&1; then
+	"$WASM_OPT" -Oz --converge --enable-bulk-memory --enable-nontrapping-float-to-int "$BUILD_ASSET" -o "$UPLOAD_ASSET"
+else
+	cp "$BUILD_ASSET" "$UPLOAD_ASSET"
 fi
 
 if gh release view "$TAG" >/dev/null 2>&1; then
-  gh release upload "$TAG" "$ASSET" --clobber
+	gh release upload "$TAG" "$UPLOAD_ASSET" --clobber
 else
-  gh release create "$TAG" "$ASSET" \
-    --title "$TAG" \
-    --notes "Sidecar guest wasm asset" \
-    --target "sidecar" \
-    --prerelease
+	gh release create "$TAG" "$UPLOAD_ASSET" \
+		--title "$TAG" \
+		--notes "Sidecar guest wasm asset" \
+		--target "sidecar" \
+		--prerelease
 fi
