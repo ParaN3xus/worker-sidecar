@@ -5,10 +5,10 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 TAG="${GUEST_RELEASE_TAG:-guest-v0.1.0}"
-ASSET="build/guest.wasm"
+ASSET="demo/build/guest.wasm"
 
 if [[ ! -f "$ASSET" ]]; then
-  echo "error: missing $ASSET, run scripts/build-worker.sh first" >&2
+  echo "error: missing $ASSET, run demo/build-worker.sh first" >&2
   exit 1
 fi
 

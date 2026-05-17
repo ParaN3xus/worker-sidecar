@@ -3,5 +3,4 @@ main = "build/index.js"
 compatibility_date = "2026-05-16"
 
 [build]
-command = "scripts/build-worker.sh"
-
+command = "demo/build-worker.sh"

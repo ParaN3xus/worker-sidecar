@@ -1,16 +1,20 @@
 {
-  "name": "typst-sidecar-worker",
+  "name": "@paranexus/worker-sidecar",
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": "./src/sidecar.ts"
+  },
   "scripts": {
-    "build": "scripts/build-worker.sh",
-    "deploy": "wrangler deploy",
-    "dry-run": "wrangler deploy --dry-run"
+    "build": "demo/build-worker.sh",
+    "deploy": "wrangler deploy --config demo/wrangler.toml",
+    "dry-run": "wrangler deploy --config demo/wrangler.toml --dry-run",
+    "publish:guest": "demo/publish-guest.sh"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260515.0",
     "esbuild": "^0.25.0",
     "wrangler": "^4.92.0"
   }
 }
-
