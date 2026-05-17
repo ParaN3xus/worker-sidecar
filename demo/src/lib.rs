@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use std::sync::Mutex;
 
+use base64::Engine;
 use serde::{Deserialize, Serialize};
 use typst::diag::{FileError, FileResult, Severity, SourceDiagnostic};
 use typst::foundations::{Bytes, Datetime};
@@ -10,6 +11,8 @@ use typst::syntax::{FileId, Source, VirtualPath};
 use typst::text::{Font, FontBook};
 use typst::utils::LazyHash;
 use typst::{Library, LibraryExt, World};
+use typst_pdf::PdfOptions;
+use typst_render::render_merged;
 use wasm_minimal_protocol::wasm_func;
 
 #[cfg(target_arch = "wasm32")]
@@ -127,12 +130,12 @@ fn render(request: &[u8]) -> Result<Vec<u8>, String> {
     let request: RenderRequest = serde_json::from_slice(request)
         .map_err(|err| format!("render request must be valid json: {err}"))?;
 
-    if request.format != "svg" {
+    if !matches!(request.format.as_str(), "svg" | "pdf" | "png") {
         return Ok(json_response(RenderResponse {
             warnings: vec![],
             errors: vec![Diagnostic {
                 severity: "error",
-                message: "only svg format is implemented".to_owned(),
+                message: "format must be one of svg, pdf, png".to_owned(),
             }],
             body: None,
             content_type: None,
@@ -159,27 +162,70 @@ fn render(request: &[u8]) -> Result<Vec<u8>, String> {
         .as_mut()
         .ok_or_else(|| "Typst world has not been initialized".to_owned())?;
 
-    Ok(render_world(world, source))
+    Ok(render_world(world, source, &request.format))
 }
 
-fn render_world(world: &mut WorkerWorld, source: String) -> Vec<u8> {
+fn render_world(world: &mut WorkerWorld, source: String, format: &str) -> Vec<u8> {
     world.set_source(source);
     let warned = typst::compile::<PagedDocument>(&*world);
     let warnings = diagnostics(warned.warnings.iter());
 
     match warned.output {
-        Ok(document) => {
-            let svg = typst_svg::svg_merged(&document, Abs::zero());
-            json_response(RenderResponse {
-                warnings,
-                errors: vec![],
-                body: Some(svg),
-                content_type: Some("image/svg+xml"),
-            })
-        }
+        Ok(document) => export_document(&document, format, warnings),
         Err(errors) => json_response(RenderResponse {
             warnings,
             errors: diagnostics(errors.iter()),
+            body: None,
+            content_type: None,
+        }),
+    }
+}
+
+fn export_document(document: &PagedDocument, format: &str, warnings: Vec<Diagnostic>) -> Vec<u8> {
+    match format {
+        "svg" => json_response(RenderResponse {
+            warnings,
+            errors: vec![],
+            body: Some(typst_svg::svg_merged(document, Abs::zero())),
+            content_type: Some("image/svg+xml"),
+        }),
+        "pdf" => match typst_pdf::pdf(document, &PdfOptions::default()) {
+            Ok(pdf) => json_response(RenderResponse {
+                warnings,
+                errors: vec![],
+                body: Some(base64::engine::general_purpose::STANDARD.encode(pdf)),
+                content_type: Some("application/pdf"),
+            }),
+            Err(errors) => json_response(RenderResponse {
+                warnings,
+                errors: diagnostics(errors.iter()),
+                body: None,
+                content_type: None,
+            }),
+        },
+        "png" => match render_merged(document, 1.0, Abs::zero(), None).encode_png() {
+            Ok(png) => json_response(RenderResponse {
+                warnings,
+                errors: vec![],
+                body: Some(base64::engine::general_purpose::STANDARD.encode(png)),
+                content_type: Some("image/png"),
+            }),
+            Err(err) => json_response(RenderResponse {
+                warnings,
+                errors: vec![Diagnostic {
+                    severity: "error",
+                    message: format!("failed to encode png: {err}"),
+                }],
+                body: None,
+                content_type: None,
+            }),
+        },
+        _ => json_response(RenderResponse {
+            warnings,
+            errors: vec![Diagnostic {
+                severity: "error",
+                message: "format must be one of svg, pdf, png".to_owned(),
+            }],
             body: None,
             content_type: None,
         }),

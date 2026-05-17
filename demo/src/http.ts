@@ -9,7 +9,7 @@ export const TEXT_HEADERS = {
 };
 
 const MODES = new Set<Mode>(["markup", "math", "code"]);
-const FORMATS = new Set<Format>(["svg"]);
+const FORMATS = new Set<Format>(["svg", "pdf", "png"]);
 
 export async function parseRenderRequest(
 	request: Request,
@@ -32,7 +32,7 @@ export async function parseRenderRequest(
 		typeof parsedFormat !== "string" ||
 		!FORMATS.has(parsedFormat as Format)
 	) {
-		return jsonError(400, "format must be svg");
+		return jsonError(400, "format must be one of svg, pdf, png");
 	}
 
 	if (typeof body.mode !== "string" || !MODES.has(body.mode as Mode)) {

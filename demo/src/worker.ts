@@ -6,7 +6,7 @@ import {
 	textError,
 } from "./http";
 import { renderViaGuest } from "./renderer";
-import type { Format, Mode, RenderRequest } from "./types";
+import type { Format, Mode, RenderRequest, RenderResponse } from "./types";
 
 export default {
 	async fetch(request: Request): Promise<Response> {
@@ -38,6 +38,14 @@ function routeFormat(pathname: string): Format | undefined | Response {
 		return "svg";
 	}
 
+	if (pathname === "/pdf") {
+		return "pdf";
+	}
+
+	if (pathname === "/png") {
+		return "png";
+	}
+
 	return textError(404, "not found");
 }
 
@@ -52,7 +60,7 @@ async function getRenderResponse(
 
 	const result = await renderViaGuest(payload);
 	if (result.status === 200 && result.payload.body) {
-		return new Response(result.payload.body, {
+		return new Response(renderBody(result.payload), {
 			status: 200,
 			headers: {
 				"content-type":
@@ -102,10 +110,39 @@ function queryRenderRequest(
 }
 
 function queryFormat(url: URL): Format | undefined {
-	return url.searchParams.get("format") === "svg" ? "svg" : undefined;
+	const format = url.searchParams.get("format");
+	return format === "svg" || format === "pdf" || format === "png"
+		? format
+		: undefined;
 }
 
 function queryMode(url: URL): Mode {
 	const mode = url.searchParams.get("mode");
 	return mode === "math" || mode === "code" ? mode : "markup";
+}
+
+function renderBody(payload: RenderResponse): BodyInit {
+	if (payload.body === null) {
+		return "";
+	}
+
+	if (
+		payload.content_type === "application/pdf" ||
+		payload.content_type === "image/png"
+	) {
+		return decodeBase64(payload.body);
+	}
+
+	return payload.body;
+}
+
+function decodeBase64(value: string): Uint8Array {
+	const binary = atob(value);
+	const bytes = new Uint8Array(binary.length);
+
+	for (let index = 0; index < binary.length; index += 1) {
+		bytes[index] = binary.charCodeAt(index);
+	}
+
+	return bytes;
 }

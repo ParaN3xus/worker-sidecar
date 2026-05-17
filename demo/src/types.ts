@@ -1,4 +1,4 @@
-export type Format = "svg";
+export type Format = "svg" | "pdf" | "png";
 export type Mode = "markup" | "math" | "code";
 
 export type RenderRequest = {
